@@ -1,0 +1,3 @@
+userName=teamelips78_db_user
+mongo_Pass=jFFCZzRMqL9NS4J6
+mongo_DB_Compass=mongodb+srv://teamelips78_db_user:jFFCZzRMqL9NS4J6@cluster0.aquzc9o.mongodb.net/?appName=Cluster0
