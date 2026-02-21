@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
     enum: ["student", "teacher", "admin"],
     default: "student",
   },
+  isApproved: {
+    type: Boolean,
+    default: false,
+  },
 });
 const User = mongoose.model("User", userSchema);
 export default User;
