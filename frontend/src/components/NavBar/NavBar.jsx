@@ -14,15 +14,16 @@ import {
 import React from "react";
 import { useEffect } from "react";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const NavBar = ({ user, onLogout }) => {
+const NavBar = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-
+  const user = useSelector((state) => state.user);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", fn);
@@ -38,7 +39,6 @@ const NavBar = ({ user, onLogout }) => {
         { label: "Login", path: "/login", icon: LogIn },
         { label: "Sign Up", path: "/signup", icon: UserPlus },
       ];
-
   return (
     <nav
       style={{
@@ -236,7 +236,7 @@ const NavBar = ({ user, onLogout }) => {
                       color: "white",
                     }}
                   >
-                    {user.fullName?.[0] || "U"}
+                    {user?.fullName?.trim()?.[0]?.toUpperCase() || "U"}
                   </div>
                   <span
                     style={{
@@ -246,7 +246,7 @@ const NavBar = ({ user, onLogout }) => {
                       fontWeight: 500,
                     }}
                   >
-                    {user.fullName?.split(" ")[0]}
+                    {user.fullName}
                   </span>
                   <ChevronRight
                     size={14}

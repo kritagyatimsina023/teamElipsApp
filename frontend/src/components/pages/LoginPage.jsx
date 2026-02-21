@@ -32,6 +32,7 @@ const LoginPage = ({ setUser }) => {
         form,
         {
           headers: { "Content-Type": "application/json" },
+          withCredentials: true,
         },
       );
       const userData = res.data.data || res.data;

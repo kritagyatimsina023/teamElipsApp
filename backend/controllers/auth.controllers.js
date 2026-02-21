@@ -44,7 +44,10 @@ export const signup = async (req, res) => {
       const savedUser = await newUser.save();
       // generateToken(savedUser._id, res);
       return res.status(201).json(
-        { message: "Signup Successfull. Await admin approval" },
+        {
+          message: "Signup Successfull. Await admin approval",
+          data: savedUser.isApproved,
+        },
         // {
         //   _id: savedUser._id,
         //   fullName: savedUser.fullName,
@@ -115,7 +118,12 @@ export const login = async (req, res) => {
   }
 };
 export const logout = (_, res) => {
-  res.cookie("jwt", "", { maxAge: 0 });
+  console.log("This is logout endpoint");
+  res.cookie("jwt", "", {
+    httpOnly: true,
+    expires: new Date(0), // expire immediately
+    sameSite: "lax",
+  });
   res.status(200).json({ message: "Logged out successfully" });
 };
 
@@ -139,5 +147,14 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({
       message: "Internal server error",
     });
+  }
+};
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    console.log(user, "From me.com");
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(401).json({ message: "Unauthorized" });
   }
 };
