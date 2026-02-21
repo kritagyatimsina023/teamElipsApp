@@ -3,6 +3,7 @@ import User from "../models/User.js";
 export const getPendingUsers = async (req, res) => {
   const users = await User.find({
     isApproved: false,
+    isRejected: false,
     role: { $ne: "admin" },
   }).select("-password");
   res.json(users);
@@ -12,7 +13,7 @@ export const rejectUser = async (req, res) => {
     req.params.id,
     {
       isApproved: false,
-      //   isRejected: true,
+      isRejected: true,
     },
     { new: true },
   );
@@ -20,7 +21,6 @@ export const rejectUser = async (req, res) => {
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
-
   res.status(200).json({
     message: "User rejected",
     user: {
@@ -47,11 +47,17 @@ export const getTotalStdTech = async (req, res) => {
     const approvedStds = await User.countDocuments({
       role: "student",
       isApproved: true,
+      isRejected: false,
     });
     const pendingStds = await User.countDocuments({
       role: "student",
+      isRejected: false,
     });
-    const totalTeacher = await User.countDocuments({ role: "teacher" });
+    const totalTeacher = await User.countDocuments({
+      role: "teacher",
+      isApproved: true,
+      isRejected: false,
+    });
     res.status(200).json({ approvedStds, pendingStds, totalTeacher });
   } catch (error) {
     console.error(error);
