@@ -5,12 +5,16 @@ import FloatingInput from "../UI/FloatingInput";
 import { Lock, LogIn, User } from "lucide-react";
 import Toast from "../UI/Toast";
 import AuthCard from "../UI/AuthCard";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { addUser } from "../../store/slices/UserSlices";
 
 const LoginPage = ({ setUser }) => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const dispatch = useDispatch();
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -22,16 +26,42 @@ const LoginPage = ({ setUser }) => {
       return showToast("All fields are required", "error");
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1200));
-    // Simulate: admin@demo.com / any password
-    if (form.email === "admin@demo.com") {
-      setUser({ fullName: "Admin User", email: form.email, role: "admin" });
-      navigate("/admin");
-    } else {
-      setUser({ fullName: "Jane Doe", email: form.email, role: "student" });
-      navigate("/dashboard");
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/api/auth/login",
+        form,
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      const userData = res.data.data || res.data;
+      console.log("user Data", userData);
+      setLoading(false);
+      dispatch(addUser(userData));
+      setToast("User logged in ");
+      if (userData.role === "admin") {
+        navigate("/admin");
+      } else if (userData.role === "teacher") {
+        navigate("/teacher");
+      } else {
+        navigate("/student");
+      }
+    } catch (error) {
+      setLoading(true);
+      //   console.error("Error occured", error);
+      const msg =
+        error?.response?.data?.message || "Somthing went wrong while login";
+      showToast(msg, "error");
+      setLoading(false);
     }
-    showToast("Welcome back!");
-    setLoading(false);
+    // // Simulate: admin@demo.com / any password
+    // if (form.email === "admin@demo.com") {
+    //   setUser({ fullName: "Admin User", email: form.email, role: "admin" });
+    //   navigate("/admin");
+    // } else {
+    //   setUser({ fullName: "Jane Doe", email: form.email, role: "student" });
+    //   navigate("/dashboard");
+    // }
   };
 
   return (

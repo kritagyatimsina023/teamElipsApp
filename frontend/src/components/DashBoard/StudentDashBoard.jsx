@@ -1,5 +1,8 @@
 import { Award, BookOpen, Check, TrendingUp } from "lucide-react";
 import React from "react";
+import ScrollReveal from "../UI/ScrollReveal";
+import GlowCard from "../UI/GlowCard";
+import ProgressBar from "../UI/ProgressBar";
 
 const StudentDashBoard = ({ user }) => {
   const courses = [
@@ -72,28 +75,28 @@ const StudentDashBoard = ({ user }) => {
             {
               label: "Enrolled Courses",
               value: "4",
-              icon: <BookOpen />,
+              icon: BookOpen,
               color: "#3b82f6",
             },
             {
               label: "Completed",
               value: "12",
-              icon: <Check />,
+              icon: Check,
               color: "#22c55e",
             },
             {
               label: "Avg Progress",
               value: "59%",
-              icon: <TrendingUp />,
+              icon: TrendingUp,
               color: "#a78bfa",
             },
             {
               label: "Achievements",
               value: "8",
-              icon: <Award />,
+              icon: Award,
               color: "#f59e0b",
             },
-          ].map(({ label, value, color }, i) => (
+          ].map(({ label, value, color, icon: Icon }, i) => (
             <ScrollReveal key={label} delay={i * 0.08} direction="up">
               <GlowCard
                 style={{

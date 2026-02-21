@@ -4,12 +4,20 @@ import authRouter from "./routes/auth.route.js";
 import { DBConnection } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import adminRouter from "./routes/admin.route.js";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true, // if you are using cookies
+  }),
+);
 
 const port = process.env.PORT || 3000;
 

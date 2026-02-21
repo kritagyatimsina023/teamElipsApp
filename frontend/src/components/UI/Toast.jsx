@@ -1,3 +1,4 @@
+import { Check, X } from "lucide-react";
 import React from "react";
 
 const Toast = ({ message, type = "success" }) => {
