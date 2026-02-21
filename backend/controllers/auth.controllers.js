@@ -1,3 +1,5 @@
+import cloudinary from "../lib/cloudinary.js";
+import { ENV } from "../lib/env.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
@@ -19,22 +21,38 @@ export const signup = async (req, res) => {
     }
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const isAdmin = email === ENV.ADMIN_EMAIL;
+    console.log("admin verification", isAdmin);
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
-      role,
+      role: isAdmin ? "admin" : role === "teacher" ? "teacher" : "student",
+      isApproved: isAdmin ? true : false,
     });
+    if (isAdmin) {
+      const savedAdmin = await newUser.save();
+      generateToken(savedAdmin._id, res);
+      return res.status(201).json(
+        {
+          message: "Admin account created",
+        },
+        savedAdmin,
+      );
+    }
     if (newUser) {
       const savedUser = await newUser.save();
-      generateToken(savedUser._id, res);
-      return res.status(201).json({
-        _id: savedUser._id,
-        fullName: savedUser.fullName,
-        email: savedUser.email,
-        profilePic: savedUser.profilePic,
-        role: savedUser.role,
-      });
+      // generateToken(savedUser._id, res);
+      return res.status(201).json(
+        { message: "Signup Successfull. Await admin approval" },
+        // {
+        //   _id: savedUser._id,
+        //   fullName: savedUser.fullName,
+        //   email: savedUser.email,
+        //   profilePic: savedUser.profilePic,
+        //   role: savedUser.role,
+        // },
+      );
     } else {
       return res.status(400).json({ message: "Invalid user" });
     }
@@ -65,12 +83,30 @@ export const login = async (req, res) => {
       return res.status(400).json({
         message: "Invalid credentials",
       });
+
+    if (user.role === "admin") {
+      generateToken(user._id, res);
+      return res.status(201).json(
+        { message: "welcome admin" },
+        {
+          _id: user._id,
+          email: user.email,
+          profilePic: user.profilePic,
+        },
+      );
+    }
+    if (!user.isApproved) {
+      return res.status(403).json({
+        message: "Account pending admin approval",
+      });
+    }
     generateToken(user._id, res);
     res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
       profilePic: user.profilePic,
+      role: user.role,
     });
   } catch (error) {
     console.error("Error in login controllers", error);
@@ -82,4 +118,27 @@ export const login = async (req, res) => {
 export const logout = (_, res) => {
   res.cookie("jwt", "", { maxAge: 0 });
   res.status(200).json({ message: "Logged out successfully" });
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { profilePic } = req.body;
+    if (!profilePic)
+      return res.status(400).json({ message: "Profile pic is required" });
+    const userId = req.user._id;
+
+    const uploadRes = await cloudinary.uploader.upload(profilePic);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic: uploadRes.secure_url },
+      { new: true },
+    ).select("-password");
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error in Update profile", error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
 };
