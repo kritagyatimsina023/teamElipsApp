@@ -11,7 +11,8 @@ import SignUpPage from "../components/pages/SignUpPage";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import Toast from "../components/UI/Toast";
-import { logout } from "../store/slices/UserSlices";
+import { addUser, logout } from "../store/slices/UserSlices";
+import { useEffect } from "react";
 
 const Allroutes = () => {
   const [users, setUser] = useState(null);
@@ -19,11 +20,14 @@ const Allroutes = () => {
   console.log(user, "this is user");
   const [toast, setToast] = useState(null);
   const dispatch = useDispatch();
+  const [loadingUser, setLoadingUser] = useState(true);
   //   console.log(data);
 
   const handleLogout = async () => {
     try {
-      const res = await axios.post("http://localhost:3000/api/auth/logout");
+      const res = await axios.post("http://localhost:3000/api/auth/logout", {
+        withCredentials: true,
+      });
       console.log(res);
       dispatch(logout());
       setToast(res, "success");
@@ -32,6 +36,28 @@ const Allroutes = () => {
       setToast(error, "error");
     }
   };
+  //   useEffect(() => {
+  //     dispatch(fetchCurrentUser());
+  //   }, [dispatch]);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/auth/getMe", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        dispatch(addUser(res.data));
+      } catch (error) {
+        console.log(error, "error getting me");
+        dispatch(logout());
+      } finally {
+        setLoadingUser(false); // important
+      }
+    };
+    fetchUser();
+  }, []);
+
   return (
     // <Layout user={user} onLogout={handleLogout}>
     //   <Routes>
@@ -84,36 +110,12 @@ const Allroutes = () => {
     <Layout user={user} onLogout={handleLogout}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route
-          path="/login"
-          element={
-            user ? (
-              <Navigate
-                to={user.role === "admin" ? "/admin" : "/dashboard"}
-                replace
-              />
-            ) : (
-              <LoginPage setUser={setUser} />
-            )
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            user ? (
-              <Navigate
-                to={user.role === "admin" ? "/admin" : "/dashboard"}
-                replace
-              />
-            ) : (
-              <SignUpPage />
-            )
-          }
-        />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
         <Route
           path="/admin"
           element={
-            <ProtectedRoute user={user} requiredRole="admin">
+            <ProtectedRoute>
               <AdminDashboard user={user} />
             </ProtectedRoute>
           }
@@ -121,7 +123,7 @@ const Allroutes = () => {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <StudentDashBoard user={user} />
             </ProtectedRoute>
           }

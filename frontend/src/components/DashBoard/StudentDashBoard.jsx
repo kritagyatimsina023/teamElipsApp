@@ -58,7 +58,7 @@ const StudentDashBoard = ({ user }) => {
                 color: "white",
               }}
             >
-              {user.fullName} 👋
+              {user?.fullName} 👋
             </h1>
           </div>
         </ScrollReveal>

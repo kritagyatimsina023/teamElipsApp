@@ -4,81 +4,243 @@ import { useState } from "react";
 import Toast from "../UI/Toast";
 import ScrollReveal from "../UI/ScrollReveal";
 import GlowCard from "../UI/GlowCard";
+import { useEffect } from "react";
+import axios from "axios";
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ user }) => {
   const [activeTab, setActiveTab] = useState("pending");
   const [pendingUsers, setPendingUsers] = useState([
-    {
-      _id: "1",
-      fullName: "Alex Chen",
-      email: "alex@edu.com",
-      role: "student",
-      createdAt: "2026-02-18",
-    },
-    {
-      _id: "2",
-      fullName: "Maria Santos",
-      email: "maria@edu.com",
-      role: "teacher",
-      createdAt: "2026-02-19",
-    },
-    {
-      _id: "3",
-      fullName: "James Kirk",
-      email: "james@edu.com",
-      role: "student",
-      createdAt: "2026-02-20",
-    },
-    {
-      _id: "4",
-      fullName: "Priya Sharma",
-      email: "priya@edu.com",
-      role: "teacher",
-      createdAt: "2026-02-21",
-    },
+    // {
+    //   _id: "1",
+    //   fullName: "Alex Chen",
+    //   email: "alex@edu.com",
+    //   role: "student",
+    //   createdAt: "2026-02-18",
+    // },
+    // {
+    //   _id: "2",
+    //   fullName: "Maria Santos",
+    //   email: "maria@edu.com",
+    //   role: "teacher",
+    //   createdAt: "2026-02-19",
+    // },
+    // {
+    //   _id: "3",
+    //   fullName: "James Kirk",
+    //   email: "james@edu.com",
+    //   role: "student",
+    //   createdAt: "2026-02-20",
+    // },
+    // {
+    //   _id: "4",
+    //   fullName: "Priya Sharma",
+    //   email: "priya@edu.com",
+    //   role: "teacher",
+    //   createdAt: "2026-02-21",
+    // },
   ]);
   const [approving, setApproving] = useState(null);
   const [toast, setToast] = useState(null);
+  // const [pendingUser, setPendingUser] = useState([]);
+  const [totalStd, setTotalStds] = useState(0);
+  const [totalTechers, setTotalTeachers] = useState(0);
+  const [stats, setStats] = useState([]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [pendingRes, countRes] = await Promise.all([
+        axios.get("http://localhost:3000/api/admin/pending-users", {
+          withCredentials: true,
+        }),
+        axios.get("http://localhost:3000/api/admin/total-counts", {
+          withCredentials: true,
+        }),
+      ]);
+
+      setPendingUsers(pendingRes.data);
+      setTotalStds(
+        Number(countRes.data.approvedStds) + Number(countRes.data.pendingStds),
+      );
+      setTotalTeachers(countRes.data.totalTeacher);
+
+      setStats([
+        {
+          label: "Pending Approvals",
+          value: pendingRes.data.length,
+          icon: Clock,
+          color: "#f59e0b",
+        },
+        {
+          label: "Total Students",
+          value:
+            Number(countRes.data.approvedStds) +
+            Number(countRes.data.pendingStds),
+          icon: GraduationCap,
+          color: "#3b82f6",
+        },
+        {
+          label: "Active Teachers",
+          value: countRes.data.totalTeacher,
+          icon: BookOpen,
+          color: "#22c55e",
+        },
+      ]);
+    } catch (err) {
+      console.error("Dashboard fetch error:", err);
+    }
+  };
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
 
+  //   const handleApprove = async (id) => {
+  //       setApproving(id);
+  //     setPendingUsers((u) => u.filter((x) => x._id !== id));
+  //     setApproving(null);
+  //     showToast("User approved successfully!");
+  //   };
   const handleApprove = async (id) => {
-    setApproving(id);
-    await new Promise((r) => setTimeout(r, 800));
-    setPendingUsers((u) => u.filter((x) => x._id !== id));
-    setApproving(null);
-    showToast("User approved successfully!");
+    try {
+      setApproving(id);
+      console.log("This is id", id);
+      await axios.put(
+        `http://localhost:3000/api/admin/approve/${id}`,
+        {},
+        { withCredentials: true },
+      );
+
+      await new Promise((r) => setTimeout(r, 800));
+      // remove user from pending list
+      setPendingUsers((prev) => prev.filter((u) => u._id !== id));
+      showToast("User approved successfully!");
+      fetchDashboardData();
+    } catch (err) {
+      console.error(err, "From approve");
+      showToast("Failed to approve user", "error");
+    } finally {
+      setApproving(null);
+    }
   };
 
-  const handleReject = (id) => {
-    setPendingUsers((u) => u.filter((x) => x._id !== id));
-    showToast("User rejected.", "error");
+  const handleReject = async (id) => {
+    try {
+      await axios.put(
+        `http://localhost:3000/api/admin/reject/${id}`,
+        {},
+        { withCredentials: true },
+      );
+      await new Promise((r) => setTimeout(r, 800));
+      setPendingUsers((prev) => prev.filter((u) => u._id !== id));
+      showToast("User rejected", "error");
+      fetchDashboardData();
+    } catch (err) {
+      console.error("From Reject", err);
+      showToast("Failed to reject user", "error");
+    }
   };
 
-  const stats = [
-    {
-      label: "Pending Approvals",
-      value: pendingUsers.length,
-      icon: Clock,
-      color: "#f59e0b",
-    },
-    {
-      label: "Total Students",
-      value: 1248,
-      icon: GraduationCap,
-      color: "#3b82f6",
-    },
-    {
-      label: "Active Teachers",
-      value: 84,
-      icon: BookOpen,
-      color: "#22c55e",
-    },
-    { label: "Courses Live", value: 312, icon: Star, color: "#a78bfa" },
-  ];
+  //   const stats = [
+  //     {
+  //       label: "Pending Approvals",
+  //       value: pendingUser.length,
+  //       icon: Clock,
+  //       color: "#f59e0b",
+  //     },
+  //     {
+  //       label: "Total Students",
+  //       value: 1248,
+  //       icon: GraduationCap,
+  //       color: "#3b82f6",
+  //     },
+  //     {
+  //       label: "Active Teachers",
+  //       value: 84,
+  //       icon: BookOpen,
+  //       color: "#22c55e",
+  //     },
+  //     { label: "Courses Live", value: 312, icon: Star, color: "#a78bfa" },
+  //   ];
+  //   useEffect(() => {
+  //     const fetchPendingUser = async () => {
+  //       try {
+  //         const res = await axios.get(
+  //           "http://localhost:3000/api/admin/pending-users",
+  //           {
+  //             headers: { "Content-Type": "application/json" },
+  //             withCredentials: true,
+  //           },
+  //         );
+  //         const resCount = await axios.get(
+  //           "http://localhost:3000/api/admin/total-counts",
+  //           {
+  //             headers: { "Content-Type": "application/json" },
+  //             withCredentials: true,
+  //           },
+  //         );
+  //         console.log("Counting", resCount.data);
+  //         console.log("Pending users", res.data);
+  //         setPendingUser(res?.data || []);
+  //         setTotalStds(
+  //           Number(resCount.data.approvedStds) +
+  //             Number(resCount.data.pendingStds),
+  //         );
+  //         setTotalTeachers(resCount.data.totalTeacher);
+  //       } catch (error) {
+  //         console.log(error, "for pending users");
+  //       }
+  //     };
+  //     fetchPendingUser();
+  //   }, []);
+
+  useEffect(() => {
+    // const fetchDashboardData = async () => {
+    //   try {
+    //     const [pendingRes, countRes] = await Promise.all([
+    //       axios.get("http://localhost:3000/api/admin/pending-users", {
+    //         withCredentials: true,
+    //       }),
+    //       axios.get("http://localhost:3000/api/admin/total-counts", {
+    //         withCredentials: true,
+    //       }),
+    //     ]);
+
+    //     setPendingUsers(pendingRes.data);
+    //     setTotalStds(
+    //       Number(countRes.data.approvedStds) +
+    //         Number(countRes.data.pendingStds),
+    //     );
+    //     setTotalTeachers(countRes.data.totalTeacher);
+
+    //     setStats([
+    //       {
+    //         label: "Pending Approvals",
+    //         value: pendingRes.data.length,
+    //         icon: Clock,
+    //         color: "#f59e0b",
+    //       },
+    //       {
+    //         label: "Total Students",
+    //         value:
+    //           Number(countRes.data.approvedStds) +
+    //           Number(countRes.data.pendingStds),
+    //         icon: GraduationCap,
+    //         color: "#3b82f6",
+    //       },
+    //       {
+    //         label: "Active Teachers",
+    //         value: countRes.data.totalTeacher,
+    //         icon: BookOpen,
+    //         color: "#22c55e",
+    //       },
+    //     ]);
+    //   } catch (err) {
+    //     console.error("Dashboard fetch error:", err);
+    //   }
+    // };
+    fetchDashboardData();
+  }, []);
 
   return (
     <div

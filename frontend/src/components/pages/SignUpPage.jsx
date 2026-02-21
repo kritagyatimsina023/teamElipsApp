@@ -41,7 +41,6 @@ const SignUpPage = () => {
       return showToast("All fields are required", "error");
     if (form.password.length < 6)
       return showToast("Password must be at least 6 characters", "error");
-
     setLoading(true);
     // await new Promise((r) => setTimeout(r, 1500));
     try {
@@ -50,6 +49,7 @@ const SignUpPage = () => {
         form,
         {
           headers: { "Content-Type": "application/json" },
+          withCredentials: true,
         },
       );
       console.log(res);

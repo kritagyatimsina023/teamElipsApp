@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getMe,
   login,
   logout,
   signup,
@@ -16,8 +17,8 @@ const router = express.Router();
 router.post("/signup", signup);
 router.post("/login", login);
 router.post("/logout", logout);
+router.get("/getMe", protectRoute, getMe);
 router.get("/pending-users", protectRoute, isAdmin, getPendingUsers);
 router.put("/approve/:id", protectRoute, isAdmin, approveUser);
-
-router.put("/update-profile", updateProfile);
+router.put("/update-profile", protectRoute, updateProfile);
 export default router;
