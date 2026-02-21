@@ -14,9 +14,13 @@ import {
 import GlowCard from "../UI/GlowCard";
 import Toast from "../UI/Toast";
 import AuthCard from "../UI/AuthCard";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { addUser } from "../../store/slices/UserSlices";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -37,11 +41,29 @@ const SignUpPage = () => {
       return showToast("All fields are required", "error");
     if (form.password.length < 6)
       return showToast("Password must be at least 6 characters", "error");
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    setSuccess(true);
-    showToast("Signup successful! Awaiting admin approval.");
+    // await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/api/auth/signup",
+        form,
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      console.log(res);
+      setLoading(false);
+      setSuccess(true);
+      dispatch(addUser(res.data));
+      showToast("Signup successful! Awaiting admin approval.");
+    } catch (error) {
+      setLoading(false);
+      console.error(error);
+      const msg =
+        error?.response?.data?.message || "Somthing went wrong while signup";
+      showToast(msg, "error");
+    }
   };
 
   if (success)

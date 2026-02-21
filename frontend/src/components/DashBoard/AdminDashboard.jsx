@@ -1,4 +1,4 @@
-import { BookOpen, Clock, GraduationCap, Star } from "lucide-react";
+import { BookOpen, Check, Clock, GraduationCap, Star } from "lucide-react";
 import React from "react";
 import { useState } from "react";
 import Toast from "../UI/Toast";

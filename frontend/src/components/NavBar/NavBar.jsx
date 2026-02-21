@@ -1,9 +1,12 @@
 import {
+  Bell,
   BookOpen,
+  ChevronRight,
   GraduationCap,
   GraduationCapIcon,
   LogIn,
   LogOut,
+  Settings,
   Shield,
   User,
   UserPlus,
@@ -272,8 +275,8 @@ const NavBar = ({ user, onLogout }) => {
                     }}
                   >
                     {[
-                      { icon: <User />, label: "Profile" },
-                      { icon: <Settings />, label: "Settings" },
+                      { icon: User, label: "Profile" },
+                      { icon: Settings, label: "Settings" },
                     ].map(({ icon: Icon, label }) => (
                       <button
                         key={label}

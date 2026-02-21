@@ -86,18 +86,17 @@ export const login = async (req, res) => {
 
     if (user.role === "admin") {
       generateToken(user._id, res);
-      return res.status(201).json(
-        { message: "welcome admin" },
-        {
-          _id: user._id,
-          email: user.email,
-          profilePic: user.profilePic,
-        },
-      );
+      return res.status(201).json({
+        message: "welcome admin",
+        id: user._id,
+        email: user.email,
+        profilePic: user.profilePic,
+        role: user.role,
+      });
     }
     if (!user.isApproved) {
       return res.status(403).json({
-        message: "Account pending admin approval",
+        message: "Wait for an admin's approval",
       });
     }
     generateToken(user._id, res);
